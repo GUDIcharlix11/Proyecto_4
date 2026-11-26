@@ -71,6 +71,14 @@ final class Ventana extends JFrame {
         return b;
     }
 
+    /** Barra de botones en dos renglones: acciones y publicación. */
+    private static JPanel barra(JPanel acciones, JPanel publicar) {
+        JPanel p = new JPanel(new GridLayout(0, 1));
+        p.add(acciones);
+        p.add(publicar);
+        return p;
+    }
+
     private static JPanel fila(JComponent... cs) {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
         for (JComponent c : cs) p.add(c);
@@ -272,10 +280,10 @@ final class Ventana extends JFrame {
             JPanel arriba = new JPanel(new BorderLayout());
             arriba.add(formulario("Fecha (AAAA-MM-DD)", fecha, "Hora (HH:MM)", hora, "Matrícula del alumno", matricula,
                     "Laboratorio (ej. LAB-QUIM)", laboratorio, "Gravedad (1 a 5)", gravedad, "Descripción", descripcion), BorderLayout.CENTER);
-            arriba.add(fila(boton("Reportar y publicar", this::reportar), boton("Corregir seleccionado", this::corregir),
-                    boton("Eliminar seleccionado", this::eliminar),
-                    boton("Publicar todos (reporte_accidentes → módulo A)", () -> seguro(() ->
-                            publicarTodos("reporte_accidentes", AccidenteService.todos(), Accidente::folio, Accidente::aMapa)))),
+            arriba.add(barra(fila(boton("Reportar y publicar", this::reportar), boton("Corregir seleccionado", this::corregir),
+                    boton("Eliminar seleccionado", this::eliminar)),
+                    fila(boton("Publicar todos (reporte_accidentes → módulo A)", () -> seguro(() ->
+                            publicarTodos("reporte_accidentes", AccidenteService.todos(), Accidente::folio, Accidente::aMapa))))),
                     BorderLayout.SOUTH);
             add(arriba, BorderLayout.NORTH);
             add(new JScrollPane(t), BorderLayout.CENTER);
@@ -343,10 +351,10 @@ final class Ventana extends JFrame {
             arriba.add(formulario("folio_inscripcion", folio, "Matrícula", matricula, "practica_id (ej. PR-QUIM-01)", practica,
                     "¿Asistió?", asistio, "Calificación (entero 0 a 10)", calif, "¿Adeudo de material?", adeudo, "Monto del adeudo", monto),
                     BorderLayout.CENTER);
-            arriba.add(fila(boton("Buscar en módulo C", this::buscar), boton("Guardar / actualizar", this::guardar),
-                    boton("Eliminar seleccionado", this::eliminar), boton("Cargar JSON…", this::importar),
-                    boton("Publicar todos (resultados_practicas → módulo C)", () -> seguro(() ->
-                            publicarTodos("resultados_practicas", ResultadoService.todos(), Resultado::folioInscripcion, Resultado::aMapa)))),
+            arriba.add(barra(fila(boton("Buscar en módulo C", this::buscar), boton("Guardar / actualizar", this::guardar),
+                    boton("Eliminar seleccionado", this::eliminar), boton("Cargar JSON…", this::importar)),
+                    fila(boton("Publicar todos (resultados_practicas → módulo C)", () -> seguro(() ->
+                            publicarTodos("resultados_practicas", ResultadoService.todos(), Resultado::folioInscripcion, Resultado::aMapa))))),
                     BorderLayout.SOUTH);
             add(arriba, BorderLayout.NORTH);
             add(new JScrollPane(t), BorderLayout.CENTER);
@@ -439,10 +447,10 @@ final class Ventana extends JFrame {
             JPanel arriba = new JPanel(new BorderLayout());
             arriba.add(formulario("Matrícula del alumno", matricula, "Material (catálogo)", material,
                     "Descripción", descripcion, "Fecha (AAAA-MM-DD)", fecha), BorderLayout.CENTER);
-            arriba.add(fila(boton("Registrar préstamo", this::registrar), boton("Marcar devuelto", this::devolver),
-                    boton("Eliminar seleccionado", this::eliminar), boton("Recargar catálogo", this::catalogo),
-                    boton("Publicar todos (prestamos)", () -> seguro(() ->
-                            publicarTodos("prestamos", PrestamoService.todos(), Prestamo::folioPrestamo, Prestamo::aMapa)))),
+            arriba.add(barra(fila(boton("Registrar préstamo", this::registrar), boton("Marcar devuelto", this::devolver),
+                    boton("Eliminar seleccionado", this::eliminar), boton("Recargar catálogo", this::catalogo)),
+                    fila(boton("Publicar todos (prestamos)", () -> seguro(() ->
+                            publicarTodos("prestamos", PrestamoService.todos(), Prestamo::folioPrestamo, Prestamo::aMapa))))),
                     BorderLayout.SOUTH);
             add(arriba, BorderLayout.NORTH);
             add(new JScrollPane(t), BorderLayout.CENTER);
@@ -513,9 +521,9 @@ final class Ventana extends JFrame {
             arriba.add(formulario("Laboratorio (ej. LAB-PROG)", laboratorio, "Clave del equipo (ej. EST-01)", equipo,
                     "Fecha (AAAA-MM-DD)", fecha, "Matrícula del alumno", matricula,
                     "Hora de inicio (HH:MM)", inicio, "Hora de fin (HH:MM)", fin), BorderLayout.CENTER);
-            arriba.add(fila(boton("Reservar", this::reservar), boton("Cancelar seleccionada", this::cancelar),
-                    boton("Publicar todas (reservaciones)", () -> seguro(() ->
-                            publicarTodos("reservaciones", ReservacionService.todas(), Reservacion::folioReservacion, Reservacion::aMapa)))),
+            arriba.add(barra(fila(boton("Reservar", this::reservar), boton("Cancelar seleccionada", this::cancelar)),
+                    fila(boton("Publicar todas (reservaciones)", () -> seguro(() ->
+                            publicarTodos("reservaciones", ReservacionService.todas(), Reservacion::folioReservacion, Reservacion::aMapa))))),
                     BorderLayout.SOUTH);
             add(arriba, BorderLayout.NORTH);
             add(new JScrollPane(t), BorderLayout.CENTER);
