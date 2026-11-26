@@ -135,8 +135,17 @@ final class Ventana extends JFrame {
 
     private <T> void publicarTodos(String recurso, List<T> registros, Function<T, String> clave, Function<T, Map<String, Object>> mapa) {
         avisar("Publicando " + registros.size() + " registros en " + recurso + "…");
-        // Las llamadas HTTP van en otro hilo para que la ventana no se congele.
-        new SwingWorker<Integer, Void>() {
+        // Las llamadas HTTP van en otro hilo para que la ventana no se congele; el diálogo modal
+        // impide cambiar registros mientras se publica la lista ya leída.
+        JDialog espera = new JDialog(this, "Publicando…", true);
+        JProgressBar barra = new JProgressBar();
+        barra.setIndeterminate(true);
+        espera.add(new JLabel("  Publicando " + registros.size() + " registros en " + recurso + "…  "), BorderLayout.NORTH);
+        espera.add(barra, BorderLayout.CENTER);
+        espera.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        espera.pack();
+        espera.setLocationRelativeTo(this);
+        SwingWorker<Integer, Void> trabajo = new SwingWorker<>() {
             private final List<String> errores = new ArrayList<>();
 
             @Override protected Integer doInBackground() {
@@ -149,6 +158,7 @@ final class Ventana extends JFrame {
             }
 
             @Override protected void done() {
+                espera.dispose();
                 int ok;
                 try { ok = get(); } catch (Exception e) { ok = 0; errores.add(e.getMessage()); }
                 String msg = "Publicados en " + recurso + ": " + ok + " de " + registros.size() + ".";
@@ -157,7 +167,9 @@ final class Ventana extends JFrame {
                 JOptionPane.showMessageDialog(Ventana.this, msg, "Publicar",
                         errores.isEmpty() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
             }
-        }.execute();
+        };
+        trabajo.execute();
+        if (!trabajo.isDone()) espera.setVisible(true);
     }
 
     private boolean confirmar(String pregunta) {
