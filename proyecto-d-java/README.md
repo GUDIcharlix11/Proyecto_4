@@ -13,6 +13,12 @@ Por defecto usa `root` sin contraseña en `localhost:3306` y crea sola la base `
 ```
 mvn compile exec:java
 ```
+Abre la interfaz gráfica (ventanas Swing) con una pestaña por sección: Kits, Accidentes, Resultados, Préstamos, Reservaciones y API.
+
+Para usar el menú de consola en lugar de las ventanas:
+```
+mvn compile exec:java -Dexec.args=consola
+```
 
 ## API
 Servidor del profesor: `https://servicios-proyecto-ed.vercel.app/api/v1` (ya es el valor por defecto de `API_BASE`; no pide clave). Especificación en `/docs`.

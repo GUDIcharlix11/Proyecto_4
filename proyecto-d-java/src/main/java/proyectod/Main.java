@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.*;
 import java.util.*;
 
-/** Menú de consola. Reemplaza kits.php, accidentes.php y resultados.php. */
+/** Menú de consola (con el argumento "consola"); sin él abre la interfaz gráfica de Ventana. */
 public final class Main {
     private static final Scanner IN = new Scanner(System.in);
 
@@ -28,6 +28,10 @@ public final class Main {
     }
 
     public static void main(String[] args) {
+        if (!Arrays.asList(args).contains("consola") && !java.awt.GraphicsEnvironment.isHeadless()) {
+            Ventana.abrir();
+            return;
+        }
         try {
             Db.get();
         } catch (Exception e) {
@@ -147,12 +151,7 @@ public final class Main {
                                 leer("Matrícula del alumno"), leer("Laboratorio (ej. LAB-QUIM)"),
                                 leer("Descripción"), leer("Gravedad (1 a 5)"));
                         System.out.println("✔ Accidente guardado con folio " + a.folio() + ".");
-                        try {
-                            ApiClient.publicar("reporte_accidentes", a.folio(), a.aMapa());
-                            System.out.println("✔ Publicado en la API (reporte_accidentes).");
-                        } catch (RuntimeException e) {
-                            System.out.println("⚠ Quedó guardado en MySQL pero no se publicó en la API: " + e.getMessage());
-                        }
+                        System.out.println(avisoPublicar("reporte_accidentes", a.folio(), a.aMapa()));
                     }
                     case "3" -> {
                         String folio = leer("Folio a corregir");
@@ -218,20 +217,20 @@ public final class Main {
         }
     }
 
-    private static void publicarUno(String recurso, String clave, Map<String, Object> cuerpo) {
+    static String avisoPublicar(String recurso, String clave, Map<String, Object> cuerpo) {
         try {
             ApiClient.publicar(recurso, clave, cuerpo);
-            System.out.println("✔ Publicado en la API (" + recurso + ").");
+            return "✔ Publicado en la API (" + recurso + ").";
         } catch (RuntimeException e) {
-            System.out.println("⚠ Quedó guardado en MySQL pero no se publicó en la API: " + e.getMessage());
+            return "⚠ Quedó guardado en MySQL pero no se publicó en la API: " + e.getMessage();
         }
     }
 
     /** Borra primero de la API; si falla, no se toca MySQL para que se pueda reintentar. */
-    private static void borrarUno(String recurso, String clave) {
+    static String avisoBorrar(String recurso, String clave) {
         try {
-            System.out.println(ApiClient.borrar(recurso, clave) ? "✔ Se borró de la API (" + recurso + ")."
-                    : "(No estaba publicado en la API.)");
+            return ApiClient.borrar(recurso, clave) ? "✔ Se borró de la API (" + recurso + ")."
+                    : "(No estaba publicado en la API.)";
         } catch (RuntimeException e) {
             throw new IllegalStateException("No se borró nada; reintenta cuando la API responda. " + e.getMessage());
         }
@@ -257,17 +256,17 @@ public final class Main {
                         Prestamo p = PrestamoService.registrar(leer("Matrícula del alumno"), leer("Clave del material (ej. MAT-001)"),
                                 leer("Descripción"), leer("Fecha (AAAA-MM-DD)", java.time.LocalDate.now().toString()));
                         System.out.println("✔ Préstamo guardado con folio " + p.folioPrestamo() + ".");
-                        publicarUno("prestamos", p.folioPrestamo(), p.aMapa());
+                        System.out.println(avisoPublicar("prestamos", p.folioPrestamo(), p.aMapa()));
                     }
                     case "3" -> {
                         Prestamo p = PrestamoService.devolver(leer("Folio del préstamo"));
                         System.out.println("✔ Préstamo " + p.folioPrestamo() + " marcado como DEVUELTO.");
-                        publicarUno("prestamos", p.folioPrestamo(), p.aMapa());
+                        System.out.println(avisoPublicar("prestamos", p.folioPrestamo(), p.aMapa()));
                     }
                     case "4" -> {
                         String folio = PrestamoService.obtener(leer("Folio a eliminar")).folioPrestamo();
                         if (leer("¿Seguro? (s/n)").equalsIgnoreCase("s")) {
-                            borrarUno("prestamos", folio);
+                            System.out.println(avisoBorrar("prestamos", folio));
                             PrestamoService.eliminar(folio);
                             System.out.println("✔ Préstamo " + folio + " eliminado.");
                         }
@@ -308,12 +307,12 @@ public final class Main {
                                 leer("Fecha (AAAA-MM-DD)", java.time.LocalDate.now().toString()), leer("Hora de inicio (HH:MM)"),
                                 leer("Hora de fin (HH:MM)"), leer("Matrícula del alumno"));
                         System.out.println("✔ Reservación guardada con folio " + r.folioReservacion() + ".");
-                        publicarUno("reservaciones", r.folioReservacion(), r.aMapa());
+                        System.out.println(avisoPublicar("reservaciones", r.folioReservacion(), r.aMapa()));
                     }
                     case "3" -> {
                         String folio = ReservacionService.obtener(leer("Folio a cancelar")).folioReservacion();
                         if (leer("¿Seguro? (s/n)").equalsIgnoreCase("s")) {
-                            borrarUno("reservaciones", folio);
+                            System.out.println(avisoBorrar("reservaciones", folio));
                             ReservacionService.cancelar(folio);
                             System.out.println("✔ Reservación " + folio + " cancelada.");
                         }
