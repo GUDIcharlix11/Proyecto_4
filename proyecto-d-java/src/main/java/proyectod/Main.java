@@ -227,12 +227,13 @@ public final class Main {
         }
     }
 
+    /** Borra primero de la API; si falla, no se toca MySQL para que se pueda reintentar. */
     private static void borrarUno(String recurso, String clave) {
         try {
-            System.out.println(ApiClient.borrar(recurso, clave) ? "✔ También se borró de la API (" + recurso + ")."
+            System.out.println(ApiClient.borrar(recurso, clave) ? "✔ Se borró de la API (" + recurso + ")."
                     : "(No estaba publicado en la API.)");
         } catch (RuntimeException e) {
-            System.out.println("⚠ Se borró de MySQL pero no de la API: " + e.getMessage());
+            throw new IllegalStateException("No se borró nada; reintenta cuando la API responda. " + e.getMessage());
         }
     }
 
@@ -264,11 +265,11 @@ public final class Main {
                         publicarUno("prestamos", p.folioPrestamo(), p.aMapa());
                     }
                     case "4" -> {
-                        String folio = leer("Folio a eliminar");
+                        String folio = PrestamoService.obtener(leer("Folio a eliminar")).folioPrestamo();
                         if (leer("¿Seguro? (s/n)").equalsIgnoreCase("s")) {
+                            borrarUno("prestamos", folio);
                             PrestamoService.eliminar(folio);
                             System.out.println("✔ Préstamo " + folio + " eliminado.");
-                            borrarUno("prestamos", folio);
                         }
                     }
                     default -> System.out.println("Opción no válida.");
@@ -310,11 +311,11 @@ public final class Main {
                         publicarUno("reservaciones", r.folioReservacion(), r.aMapa());
                     }
                     case "3" -> {
-                        String folio = leer("Folio a cancelar");
+                        String folio = ReservacionService.obtener(leer("Folio a cancelar")).folioReservacion();
                         if (leer("¿Seguro? (s/n)").equalsIgnoreCase("s")) {
+                            borrarUno("reservaciones", folio);
                             ReservacionService.cancelar(folio);
                             System.out.println("✔ Reservación " + folio + " cancelada.");
-                            borrarUno("reservaciones", folio);
                         }
                     }
                     default -> System.out.println("Opción no válida.");
