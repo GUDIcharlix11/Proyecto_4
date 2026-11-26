@@ -7,8 +7,8 @@ final class Config {
     static final String DB_USER   = env("DB_USER", "root");
     static final String DB_PASS   = env("DB_PASS", "");
 
-    /** URL base del servicio de la API que dio el profesor (CAMBIAR). */
-    static final String API_BASE  = env("API_BASE", "http://localhost:8080");
+    /** URL base del servicio de la API del profesor (sin /api/v1). */
+    static final String API_BASE  = env("API_BASE", "https://servicios-proyecto-ed.vercel.app");
     static final String API_KEY   = env("API_KEY", "");
 
     private Config() {}

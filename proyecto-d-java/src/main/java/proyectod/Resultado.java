@@ -11,7 +11,7 @@ record Resultado(String folioInscripcion, String matricula, String practicaId, S
         m.put("matricula", matricula);
         m.put("practica_id", practicaId);
         m.put("asistio", asistio);
-        m.put("calificacion", calificacion);
+        m.put("calificacion", (int) Math.round(calificacion));
         m.put("adeudo_material", adeudoMaterial);
         m.put("monto_adeudo", montoAdeudo);
         return m;

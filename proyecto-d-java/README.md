@@ -15,6 +15,10 @@ mvn compile exec:java
 ```
 
 ## API
+Servidor del profesor: `https://servicios-proyecto-ed.vercel.app/api/v1` (ya es el valor por defecto de `API_BASE`; no pide clave). Especificación en `/docs`.
+- Cada registro se publica con `POST` de un solo objeto (si la clave ya existe, lo sustituye). Nunca se manda `{"datos": [...]}` porque eso reemplaza la lista completa del servidor.
+- `calificacion` debe ser entero (la API responde 422 con decimales).
+- El folio de un accidente nuevo toma en cuenta los folios que ya están en la API, para no pisar reportes publicados desde otra computadora.
 - **Consume**: `inscritos_practicas` (publica el módulo C) para validar los folios al capturar resultados.
 - **Publica**: `reporte_accidentes` (lo consume el módulo A / Equipo 1) y `resultados_practicas` (lo consume el módulo C).
 

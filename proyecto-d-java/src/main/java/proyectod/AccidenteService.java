@@ -1,5 +1,6 @@
 package proyectod;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.*;
 
 /** Equivale a funciones_accidentes.php. */
@@ -28,11 +29,18 @@ final class AccidenteService {
 
     static String siguienteFolio(String fecha) {
         String prefijo = "ACC-" + fecha.replace("-", "") + "-";
-        int max = 0;
-        for (Map<String, Object> f : Db.consultar("SELECT folio FROM accidentes WHERE folio LIKE ?", prefijo + "%")) {
-            String folio = Db.s(f.get("folio"));
-            max = Math.max(max, Integer.parseInt(folio.substring(folio.length() - 3)));
+        List<String> usados = new ArrayList<>();
+        for (Map<String, Object> f : Db.consultar("SELECT folio FROM accidentes WHERE folio LIKE ?", prefijo + "%"))
+            usados.add(Db.s(f.get("folio")));
+        try {
+            for (JsonNode n : ApiClient.lista("reporte_accidentes")) usados.add(n.path("folio").asText(""));
+        } catch (RuntimeException e) {
+            // Sin API solo se cuentan los folios locales.
         }
+        int max = 0;
+        for (String folio : usados)
+            if (folio.startsWith(prefijo) && folio.matches(".*-\\d{3}"))
+                max = Math.max(max, Integer.parseInt(folio.substring(folio.length() - 3)));
         int n = max + 1;
         if (n > 999) throw new IllegalArgumentException("Ya se usaron los 999 folios del " + fecha + ".");
         return prefijo + String.format("%03d", n);

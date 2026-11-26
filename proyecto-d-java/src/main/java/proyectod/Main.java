@@ -195,7 +195,7 @@ public final class Main {
                         if (Boolean.FALSE.equals(enC)) System.out.println("⚠ Ese folio NO aparece en inscritos_practicas (módulo C).");
                         else if (enC == null) System.out.println("⚠ No pude verificar el folio contra el módulo C.");
                         String asistio = leer("¿Asistió? (S/N)", "S").toUpperCase();
-                        String calif = asistio.equals("N") ? "0" : leer("Calificación (0 a 10)");
+                        String calif = asistio.equals("N") ? "0" : leer("Calificación (entero de 0 a 10)");
                         String adeudo = leer("¿Adeudo de material? (S/N)", "N").toUpperCase();
                         String monto = adeudo.equals("S") ? leer("Monto del adeudo", "0") : "0";
                         String estado = ResultadoService.guardar(folio, leer("Matrícula"), leer("practica_id (ej. PR-QUIM-01)"),

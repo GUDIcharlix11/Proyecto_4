@@ -71,8 +71,9 @@ final class Validaciones {
         if (!"S".equals(asistio) && !"N".equals(asistio)) e.add("'asistio' debe ser \"S\" o \"N\".");
         if (!"S".equals(adeudo) && !"N".equals(adeudo)) e.add("'adeudo_material' debe ser \"S\" o \"N\".");
 
-        if (!esNumero(calificacion) || Double.parseDouble(calificacion.trim()) < 0 || Double.parseDouble(calificacion.trim()) > 10)
-            e.add("La calificación debe ser un número de 0 a 10.");
+        if (!esNumero(calificacion) || Double.parseDouble(calificacion.trim()) < 0 || Double.parseDouble(calificacion.trim()) > 10
+                || Double.parseDouble(calificacion.trim()) % 1 != 0)
+            e.add("La calificación debe ser un número entero de 0 a 10.");
         else if ("N".equals(asistio) && Double.parseDouble(calificacion.trim()) != 0)
             e.add("Si el alumno no asistió, la calificación es 0 (RN-D03).");
 
