@@ -104,7 +104,14 @@ final class Ventana extends JFrame {
     }
 
     private static DefaultTableModel modelo(String... columnas) {
-        return new DefaultTableModel(columnas, 0) { @Override public boolean isCellEditable(int r, int c) { return false; } };
+        return new DefaultTableModel(columnas, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+            /** Así las columnas numéricas se ordenan como números y no como texto. */
+            @Override public Class<?> getColumnClass(int c) {
+                Object v = getRowCount() > 0 ? getValueAt(0, c) : null;
+                return v == null ? Object.class : v.getClass();
+            }
+        };
     }
 
     /** Valor de la columna 0 de la fila seleccionada (el folio). */
@@ -352,7 +359,7 @@ final class Ventana extends JFrame {
                 m.setRowCount(0);
                 for (Resultado r : ResultadoService.todos())
                     m.addRow(new Object[]{r.folioInscripcion(), r.matricula(), r.practicaId(), r.asistio(),
-                            String.format("%.0f", r.calificacion()), r.adeudoMaterial(), String.format("%.2f", r.montoAdeudo())});
+                            r.calificacion(), r.adeudoMaterial(), r.montoAdeudo()});
             });
         }
 
@@ -362,7 +369,10 @@ final class Ventana extends JFrame {
             int i = t.convertRowIndexToModel(r);
             folio.setText((String) m.getValueAt(i, 0)); matricula.setText((String) m.getValueAt(i, 1));
             practica.setText((String) m.getValueAt(i, 2)); asistio.setSelectedItem(m.getValueAt(i, 3));
-            calif.setText((String) m.getValueAt(i, 4)); adeudo.setSelectedItem(m.getValueAt(i, 5)); monto.setText((String) m.getValueAt(i, 6));
+            double c = (Double) m.getValueAt(i, 4);
+            calif.setText(c % 1 == 0 ? String.valueOf((long) c) : String.valueOf(c));
+            adeudo.setSelectedItem(m.getValueAt(i, 5));
+            monto.setText(String.format(Locale.ROOT, "%.2f", (Double) m.getValueAt(i, 6)));
         }
 
         /** Trae matrícula y práctica del inscrito publicado por el módulo C. */
