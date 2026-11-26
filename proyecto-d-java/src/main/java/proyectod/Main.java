@@ -38,12 +38,14 @@ public final class Main {
         System.out.println("Base de datos: " + Config.DB_NAME + " · conectada");
         while (true) {
             System.out.println("\n=== Laboratorios y talleres · Equipo 4 ===");
-            System.out.println("1) Kits\n2) Accidentes\n3) Resultados de práctica\n4) API (módulos A y C)\n0) Salir");
+            System.out.println("1) Kits\n2) Accidentes\n3) Resultados de práctica\n4) API (módulos A y C)\n5) Préstamos de material\n6) Reservaciones de laboratorio\n0) Salir");
             switch (leer("Opción")) {
                 case "1" -> menuKits();
                 case "2" -> menuAccidentes();
                 case "3" -> menuResultados();
                 case "4" -> menuApi();
+                case "5" -> menuPrestamos();
+                case "6" -> menuReservaciones();
                 case "0" -> { return; }
                 default -> System.out.println("Opción no válida.");
             }
@@ -216,12 +218,118 @@ public final class Main {
         }
     }
 
+    private static void publicarUno(String recurso, String clave, Map<String, Object> cuerpo) {
+        try {
+            ApiClient.publicar(recurso, clave, cuerpo);
+            System.out.println("✔ Publicado en la API (" + recurso + ").");
+        } catch (RuntimeException e) {
+            System.out.println("⚠ Quedó guardado en MySQL pero no se publicó en la API: " + e.getMessage());
+        }
+    }
+
+    private static void borrarUno(String recurso, String clave) {
+        try {
+            System.out.println(ApiClient.borrar(recurso, clave) ? "✔ También se borró de la API (" + recurso + ")."
+                    : "(No estaba publicado en la API.)");
+        } catch (RuntimeException e) {
+            System.out.println("⚠ Se borró de MySQL pero no de la API: " + e.getMessage());
+        }
+    }
+
+    // ---------------- Préstamos ----------------
+    private static void menuPrestamos() {
+        while (true) {
+            System.out.println("\n-- Préstamos de material --\n1) Listar\n2) Registrar préstamo\n3) Registrar devolución\n4) Eliminar\n0) Volver");
+            String op = leer("Opción");
+            if (op.equals("0")) return;
+            seguro(() -> {
+                switch (op) {
+                    case "1" -> {
+                        List<Prestamo> l = PrestamoService.todos();
+                        if (l.isEmpty()) System.out.println("No hay préstamos registrados.");
+                        for (Prestamo p : l)
+                            System.out.printf("%s | %s | %s | %s | %s | %s%n", p.folioPrestamo(), p.fecha(), p.matricula(),
+                                    p.claveMaterial(), p.estado(), p.descripcion());
+                    }
+                    case "2" -> {
+                        mostrarCatalogo();
+                        Prestamo p = PrestamoService.registrar(leer("Matrícula del alumno"), leer("Clave del material (ej. MAT-001)"),
+                                leer("Descripción"), leer("Fecha (AAAA-MM-DD)", java.time.LocalDate.now().toString()));
+                        System.out.println("✔ Préstamo guardado con folio " + p.folioPrestamo() + ".");
+                        publicarUno("prestamos", p.folioPrestamo(), p.aMapa());
+                    }
+                    case "3" -> {
+                        Prestamo p = PrestamoService.devolver(leer("Folio del préstamo"));
+                        System.out.println("✔ Préstamo " + p.folioPrestamo() + " marcado como DEVUELTO.");
+                        publicarUno("prestamos", p.folioPrestamo(), p.aMapa());
+                    }
+                    case "4" -> {
+                        String folio = leer("Folio a eliminar");
+                        if (leer("¿Seguro? (s/n)").equalsIgnoreCase("s")) {
+                            PrestamoService.eliminar(folio);
+                            System.out.println("✔ Préstamo " + folio + " eliminado.");
+                            borrarUno("prestamos", folio);
+                        }
+                    }
+                    default -> System.out.println("Opción no válida.");
+                }
+            });
+        }
+    }
+
+    private static void mostrarCatalogo() {
+        try {
+            for (JsonNode n : ApiClient.lista("materiales"))
+                System.out.printf("  %s  %-30s $%8.2f  existencia %d%n", n.path("clave_material").asText(),
+                        n.path("nombre").asText(), n.path("costo").asDouble(), n.path("existencia").asInt());
+        } catch (RuntimeException e) {
+            System.out.println("⚠ No pude leer el catálogo de materiales: " + e.getMessage());
+        }
+    }
+
+    // ---------------- Reservaciones ----------------
+    private static void menuReservaciones() {
+        while (true) {
+            System.out.println("\n-- Reservaciones de laboratorio --\n1) Listar\n2) Reservar\n3) Cancelar\n0) Volver");
+            String op = leer("Opción");
+            if (op.equals("0")) return;
+            seguro(() -> {
+                switch (op) {
+                    case "1" -> {
+                        List<Reservacion> l = ReservacionService.todas();
+                        if (l.isEmpty()) System.out.println("No hay reservaciones registradas.");
+                        for (Reservacion r : l)
+                            System.out.printf("%s | %s %s-%s | %s | %s | %s%n", r.folioReservacion(), r.fecha(), r.horaInicio(),
+                                    r.horaFin(), r.laboratorio(), r.claveEquipo(), r.matricula());
+                    }
+                    case "2" -> {
+                        Reservacion r = ReservacionService.reservar(leer("Laboratorio (ej. LAB-PROG)"), leer("Clave del equipo (ej. EST-01)"),
+                                leer("Fecha (AAAA-MM-DD)", java.time.LocalDate.now().toString()), leer("Hora de inicio (HH:MM)"),
+                                leer("Hora de fin (HH:MM)"), leer("Matrícula del alumno"));
+                        System.out.println("✔ Reservación guardada con folio " + r.folioReservacion() + ".");
+                        publicarUno("reservaciones", r.folioReservacion(), r.aMapa());
+                    }
+                    case "3" -> {
+                        String folio = leer("Folio a cancelar");
+                        if (leer("¿Seguro? (s/n)").equalsIgnoreCase("s")) {
+                            ReservacionService.cancelar(folio);
+                            System.out.println("✔ Reservación " + folio + " cancelada.");
+                            borrarUno("reservaciones", folio);
+                        }
+                    }
+                    default -> System.out.println("Opción no válida.");
+                }
+            });
+        }
+    }
+
     // ---------------- API ----------------
     private static void menuApi() {
         System.out.println("\nAPI base: " + Config.API_BASE);
         while (true) {
             System.out.println("\n-- API --\n1) Ver inscritos_practicas (módulo C)\n2) Publicar accidentes (reporte_accidentes → módulo A)\n"
-                    + "3) Publicar resultados (resultados_practicas → módulo C)\n0) Volver");
+                    + "3) Publicar resultados (resultados_practicas → módulo C)\n4) Ver catálogo de materiales\n"
+                    + "5) Publicar préstamos (prestamos → módulo D)\n6) Publicar reservaciones (reservaciones → módulo D)\n0) Volver");
             String op = leer("Opción");
             if (op.equals("0")) return;
             seguro(() -> {
@@ -244,6 +352,23 @@ public final class Main {
                         for (Resultado r : ResultadoService.todos()) {
                             try { ApiClient.publicar("resultados_practicas", r.folioInscripcion(), r.aMapa()); ok++; }
                             catch (RuntimeException e) { System.out.println("✗ " + r.folioInscripcion() + ": " + e.getMessage()); }
+                        }
+                        System.out.println("Publicados: " + ok);
+                    }
+                    case "4" -> mostrarCatalogo();
+                    case "5" -> {
+                        int ok = 0;
+                        for (Prestamo p : PrestamoService.todos()) {
+                            try { ApiClient.publicar("prestamos", p.folioPrestamo(), p.aMapa()); ok++; }
+                            catch (RuntimeException e) { System.out.println("✗ " + p.folioPrestamo() + ": " + e.getMessage()); }
+                        }
+                        System.out.println("Publicados: " + ok);
+                    }
+                    case "6" -> {
+                        int ok = 0;
+                        for (Reservacion r : ReservacionService.todas()) {
+                            try { ApiClient.publicar("reservaciones", r.folioReservacion(), r.aMapa()); ok++; }
+                            catch (RuntimeException e) { System.out.println("✗ " + r.folioReservacion() + ": " + e.getMessage()); }
                         }
                         System.out.println("Publicados: " + ok);
                     }

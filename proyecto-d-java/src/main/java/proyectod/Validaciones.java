@@ -83,4 +83,26 @@ final class Validaciones {
             e.add("Sin adeudo (\"N\") el monto_adeudo debe ser 0 (RN-D06).");
         return e;
     }
+
+    static List<String> validarPrestamo(String matricula, String claveMaterial, String descripcion, String fecha) {
+        List<String> e = new ArrayList<>();
+        texto(e, "matricula", matricula, 50);
+        texto(e, "clave_material", claveMaterial, 20);
+        texto(e, "descripcion", descripcion, 255);
+        String f = errorFecha(fecha);
+        if (f != null) e.add(f);
+        return e;
+    }
+
+    static List<String> validarReservacion(String laboratorio, String claveEquipo, String fecha,
+                                           String inicio, String fin, String matricula) {
+        List<String> e = new ArrayList<>();
+        texto(e, "laboratorio", laboratorio, 100);
+        texto(e, "clave_equipo", claveEquipo, 30);
+        texto(e, "matricula", matricula, 50);
+        for (String x : new String[]{errorFecha(fecha), errorHora(inicio), errorHora(fin)}) if (x != null) e.add(x);
+        if (errorHora(inicio) == null && errorHora(fin) == null && inicio.compareTo(fin) >= 0)
+            e.add("La hora de fin debe ser posterior a la de inicio.");
+        return e;
+    }
 }

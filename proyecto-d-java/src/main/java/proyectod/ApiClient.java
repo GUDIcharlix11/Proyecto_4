@@ -15,6 +15,7 @@ import java.util.Map;
  *
  * Lo que consume el módulo D:  inscritos_practicas (lo publica C).
  * Lo que publica el módulo D:  resultados_practicas (lo consume C) y reporte_accidentes (lo consume A = Equipo 1).
+ * Internos del módulo D:       materiales (catálogo fijo, solo lectura), prestamos y reservaciones.
  */
 final class ApiClient {
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
@@ -65,6 +66,27 @@ final class ApiClient {
         } catch (IllegalStateException e) {
             return null;
         }
+    }
+
+    /** GET de un registro; null si la API responde 404. */
+    static JsonNode uno(String recurso, String clave) {
+        HttpResponse<String> r = enviar(base(ruta(recurso, clave)).GET().build());
+        if (r.statusCode() == 404) return null;
+        if (r.statusCode() != 200) throw new IllegalStateException("La API respondió " + r.statusCode() + " en " + ruta(recurso, clave));
+        try {
+            return JSON.readTree(r.body());
+        } catch (IOException e) {
+            throw new IllegalStateException("La API no devolvió un JSON válido.");
+        }
+    }
+
+    /** DELETE de un registro. Devuelve false si no estaba publicado (404). */
+    static boolean borrar(String recurso, String clave) {
+        HttpResponse<String> r = enviar(base(ruta(recurso, clave)).DELETE().build());
+        if (r.statusCode() == 404) return false;
+        if (r.statusCode() / 100 != 2)
+            throw new IllegalStateException("La API no borró " + clave + " (" + r.statusCode() + "): " + r.body());
+        return true;
     }
 
     /** Publica un registro: POST a la lista; si ya existe (409), PUT al recurso. Devuelve el código HTTP final. */

@@ -54,6 +54,27 @@ final class Db {
           CHECK (asistio IN ('S','N')),
           CHECK (adeudo_material IN ('S','N')),
           CHECK (calificacion BETWEEN 0 AND 10)
+        """ + FIN,
+        """
+        CREATE TABLE IF NOT EXISTS prestamos (
+          folio_prestamo VARCHAR(20) PRIMARY KEY,
+          matricula VARCHAR(50) NOT NULL,
+          clave_material VARCHAR(20) NOT NULL,
+          descripcion VARCHAR(255) NOT NULL,
+          fecha DATE NOT NULL,
+          estado VARCHAR(10) NOT NULL,
+          CHECK (estado IN ('ACTIVO','DEVUELTO'))
+        """ + FIN,
+        """
+        CREATE TABLE IF NOT EXISTS reservaciones (
+          folio_reservacion VARCHAR(20) PRIMARY KEY,
+          laboratorio VARCHAR(100) NOT NULL,
+          clave_equipo VARCHAR(30) NOT NULL,
+          fecha DATE NOT NULL,
+          hora_inicio CHAR(5) NOT NULL,
+          hora_fin CHAR(5) NOT NULL,
+          matricula VARCHAR(50) NOT NULL,
+          CHECK (hora_inicio < hora_fin)
         """ + FIN
     };
 

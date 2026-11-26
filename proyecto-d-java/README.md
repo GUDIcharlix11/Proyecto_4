@@ -18,7 +18,13 @@ mvn compile exec:java
 Servidor del profesor: `https://servicios-proyecto-ed.vercel.app/api/v1` (ya es el valor por defecto de `API_BASE`; no pide clave). Especificación en `/docs`.
 - Cada registro se publica con `POST` de un solo objeto (si la clave ya existe, lo sustituye). Nunca se manda `{"datos": [...]}` porque eso reemplaza la lista completa del servidor.
 - `calificacion` debe ser entero (la API responde 422 con decimales).
-- El folio de un accidente nuevo toma en cuenta los folios que ya están en la API, para no pisar reportes publicados desde otra computadora.
+- El folio de un accidente, préstamo (`PRE-###`) o reservación (`RES-###`) nuevo también toma en cuenta los folios que devuelve la API.
+- Modo prueba / base: mientras el profesor tenga el módulo en prueba, los GET devuelven datos inventados y lo que publicas se guarda pero no se ve en la lectura. Al pasar a base, la lectura ya muestra lo publicado.
+
+### Recursos internos del módulo D
+- **materiales** (catálogo fijo, solo lectura): menú 4) API → 4) y al registrar un préstamo.
+- **prestamos** (menú 5): registrar (valida que la clave exista en el catálogo y que haya existencia), marcar DEVUELTO y eliminar. Cada cambio se publica o se borra en la API.
+- **reservaciones** (menú 6): reservar (hora de fin posterior a la de inicio y sin choque con otra reservación del mismo equipo, laboratorio y fecha) y cancelar. Cada cambio se publica o se borra en la API.
 - **Consume**: `inscritos_practicas` (publica el módulo C) para validar los folios al capturar resultados.
 - **Publica**: `reporte_accidentes` (lo consume el módulo A / Equipo 1) y `resultados_practicas` (lo consume el módulo C).
 
