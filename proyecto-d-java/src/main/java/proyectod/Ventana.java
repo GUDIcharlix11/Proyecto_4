@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Function;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.*;
 
@@ -95,6 +96,9 @@ final class Ventana extends JFrame {
     private static JTable tabla(DefaultTableModel m) {
         JTable t = new JTable(m);
         t.setAutoCreateRowSorter(true);
+        DefaultTableCellRenderer texto = new DefaultTableCellRenderer();
+        texto.putClientProperty("html.disable", Boolean.TRUE);
+        t.setDefaultRenderer(Object.class, texto);
         t.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         return t;
     }
