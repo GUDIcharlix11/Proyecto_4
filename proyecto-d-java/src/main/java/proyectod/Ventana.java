@@ -249,7 +249,9 @@ final class Ventana extends JFrame {
                 });
                 JPanel f = new JPanel(new GridLayout(0, 2, 6, 4));
                 for (Object o : pares) f.add(o instanceof String t ? new JLabel(t) : (Component) o);
-                if (JOptionPane.showConfirmDialog(this, f, "Devolución de «" + k.nombre + "»", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
+                JScrollPane desliza = new JScrollPane(f);
+                desliza.setPreferredSize(new Dimension(f.getPreferredSize().width + 30, Math.min(f.getPreferredSize().height + 10, 400)));
+                if (JOptionPane.showConfirmDialog(this, desliza, "Devolución de «" + k.nombre + "»", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
                 Map<String, Integer> devuelto = new LinkedHashMap<>();
                 devueltas.forEach((c, s) -> devuelto.put(c, (Integer) s.getValue()));
                 List<KitService.Faltante> faltantes = KitService.revisarDevolucion(k, devuelto);
