@@ -134,16 +134,30 @@ final class Ventana extends JFrame {
     private static String ahora() { return LocalTime.now().toString().substring(0, 5); }
 
     private <T> void publicarTodos(String recurso, List<T> registros, Function<T, String> clave, Function<T, Map<String, Object>> mapa) {
-        int ok = 0;
-        List<String> errores = new ArrayList<>();
-        for (T r : registros) {
-            try { ApiClient.publicar(recurso, clave.apply(r), mapa.apply(r)); ok++; }
-            catch (RuntimeException e) { errores.add(clave.apply(r) + ": " + e.getMessage()); }
-        }
-        String msg = "Publicados en " + recurso + ": " + ok + " de " + registros.size() + ".";
-        if (!errores.isEmpty()) msg += "\n\n✗ " + String.join("\n✗ ", errores);
-        JOptionPane.showMessageDialog(this, msg, "Publicar", errores.isEmpty() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
-        avisar("Publicados en " + recurso + ": " + ok + " de " + registros.size() + ".");
+        avisar("Publicando " + registros.size() + " registros en " + recurso + "…");
+        // Las llamadas HTTP van en otro hilo para que la ventana no se congele.
+        new SwingWorker<Integer, Void>() {
+            private final List<String> errores = new ArrayList<>();
+
+            @Override protected Integer doInBackground() {
+                int ok = 0;
+                for (T r : registros) {
+                    try { ApiClient.publicar(recurso, clave.apply(r), mapa.apply(r)); ok++; }
+                    catch (RuntimeException e) { errores.add(clave.apply(r) + ": " + e.getMessage()); }
+                }
+                return ok;
+            }
+
+            @Override protected void done() {
+                int ok;
+                try { ok = get(); } catch (Exception e) { ok = 0; errores.add(e.getMessage()); }
+                String msg = "Publicados en " + recurso + ": " + ok + " de " + registros.size() + ".";
+                avisar(msg);
+                if (!errores.isEmpty()) msg += "\n\n✗ " + String.join("\n✗ ", errores);
+                JOptionPane.showMessageDialog(Ventana.this, msg, "Publicar",
+                        errores.isEmpty() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
+            }
+        }.execute();
     }
 
     private boolean confirmar(String pregunta) {
